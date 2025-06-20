@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SBB Clock</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+	//dimensioni ideali 32x32px - per file .ico sostituire campi "png"
+  <script src="sbbUhr-1.3.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    #clock-container {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="clock-container"></div>
+
+  <script>
+    // Funzione compatibile che estrae l'orario UTC da API TXT
+    async function getTimeOffset() {
+      try {
+        const res = await fetch('https://worldtimeapi.org/api/ip.txt');
+        const text = await res.text();
+        const line = text.split('\n').find(l => l.startsWith('datetime:'));
+        const datetime = line.split('datetime:')[1].trim();
+        const serverTime = new Date(datetime).getTime();
+        const localTime = Date.now();
+        return serverTime - localTime;
+      } catch (e) {
+        return 0; // fallback se offline
+      }
+    }
+
+    getTimeOffset().then(offset => {
+      // Assegna nuova funzione d'orario a sbbUhr
+      if (typeof sbbUhr !== "undefined") {
+        sbbUhr.now = () => new Date(Date.now() + offset);
+        const clock = new sbbUhr('clock-container', true, 30);
+        clock.start();
+      } else {
+        console.error("sbbUhr non caricato");
+      }
+    });
+  </script>
+</body>
+<nav style="background: #000; padding: 1em; display: flex; gap: 1em; font-family: sans-serif;">
+  <a href="index.html" style="color: white; text-decoration: none;">Home</a>
+  <a href="clock.html" style="color: white; text-decoration: none;">SBB Clock</a>
+  <a href="diritti.html" style="color: white; text-decoration: none;">Diritti</a>
+</nav>
+</html>
